@@ -1,12 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
     <title>ServiceNow ITSM Incident Debugger</title>
 
     <style>
+
         body {
             font-family: Arial, sans-serif;
             background: #f4f6f8;
@@ -25,7 +30,6 @@
 
         h1 {
             color: #1f2937;
-            margin-bottom: 5px;
         }
 
         .subtitle {
@@ -47,7 +51,6 @@
             border-radius: 8px;
             font-size: 15px;
             box-sizing: border-box;
-            resize: vertical;
         }
 
         button {
@@ -80,26 +83,21 @@
             margin-top: 20px;
         }
 
-        .section h3 {
-            color: #374151;
-        }
-
-        li {
-            margin-bottom: 8px;
-        }
-
-        .priority {
-            font-weight: bold;
-        }
-
         .error {
             color: #b91c1c;
             background: #fee2e2;
             padding: 15px;
             border-radius: 8px;
         }
+
+        .success {
+            color: #166534;
+        }
+
     </style>
+
 </head>
+
 
 <body>
 
@@ -112,32 +110,170 @@
         troubleshooting steps and recommended actions.
     </p>
 
+
     <label for="incident">
+
         Incident Description
+
     </label>
+
 
     <textarea
         id="incident"
         placeholder="Example: Users are unable to connect to VPN. VPN authentication failed."
     ></textarea>
 
+
     <button onclick="analyzeIncident()">
+
         Analyze Incident
+
     </button>
+
 
     <div id="result"></div>
 
 </div>
 
+
 <script>
 
-async function analyzeIncident() {
+
+const knowledgeBase = [
+
+    {
+        keywords: [
+            "vpn",
+            "vpn connection",
+            "vpn authentication"
+        ],
+
+        category: "Network / VPN",
+
+        priority: "High",
+
+        root_cause: [
+            "VPN gateway connectivity issue",
+            "Authentication failure",
+            "Firewall or network restriction"
+        ],
+
+        troubleshooting_steps: [
+            "Check VPN gateway availability",
+            "Verify user authentication",
+            "Test network connectivity",
+            "Check firewall rules",
+            "Review recent Change Requests"
+        ],
+
+        recommended_action:
+            "Check VPN connectivity and authentication logs."
+    },
+
+
+    {
+        keywords: [
+            "ldap",
+            "ldap timeout",
+            "ldap authentication"
+        ],
+
+        category: "Authentication / LDAP",
+
+        priority: "High",
+
+        root_cause: [
+            "LDAP server unavailable",
+            "Network connectivity issue",
+            "LDAP port blocked",
+            "Incorrect LDAP configuration"
+        ],
+
+        troubleshooting_steps: [
+            "Check LDAP server availability",
+            "Test LDAP port 389 or 636",
+            "Check network connectivity",
+            "Verify LDAP configuration",
+            "Check MID Server connectivity"
+        ],
+
+        recommended_action:
+            "Test LDAP connectivity from the MID Server."
+    },
+
+
+    {
+        keywords: [
+            "email",
+            "email notification",
+            "not receiving email"
+        ],
+
+        category: "Email / Notification",
+
+        priority: "Medium",
+
+        root_cause: [
+            "SMTP configuration issue",
+            "Email notification configuration issue",
+            "Mailbox or recipient issue"
+        ],
+
+        troubleshooting_steps: [
+            "Check ServiceNow email logs",
+            "Verify SMTP configuration",
+            "Check notification conditions",
+            "Verify recipient email address",
+            "Check outbound email status"
+        ],
+
+        recommended_action:
+            "Review ServiceNow email logs and notification configuration."
+    },
+
+
+    {
+        keywords: [
+            "login",
+            "unable to login",
+            "authentication failed"
+        ],
+
+        category: "Access / Authentication",
+
+        priority: "High",
+
+        root_cause: [
+            "Authentication failure",
+            "Account locked",
+            "Identity provider issue",
+            "Incorrect credentials"
+        ],
+
+        troubleshooting_steps: [
+            "Verify user credentials",
+            "Check whether the account is locked",
+            "Review authentication logs",
+            "Check identity provider availability",
+            "Verify user account status"
+        ],
+
+        recommended_action:
+            "Check authentication logs and verify the user's account status."
+    }
+
+];
+
+
+function analyzeIncident() {
 
     const description =
         document.getElementById("incident").value.trim();
 
+
     const resultDiv =
         document.getElementById("result");
+
 
     if (!description) {
 
@@ -150,125 +286,134 @@ async function analyzeIncident() {
         return;
     }
 
-    try {
 
-        const response =
-            await fetch("knowledge/incidents.json");
+    const text =
+        description.toLowerCase();
 
-        const knowledgeBase =
-            await response.json();
 
-        const text =
-            description.toLowerCase();
+    let bestMatch = null;
 
-        let bestMatch = null;
-        let highestScore = 0;
+    let highestScore = 0;
 
-        knowledgeBase.forEach(issue => {
 
-            let score = 0;
+    knowledgeBase.forEach(issue => {
 
-            issue.keywords.forEach(keyword => {
+        let score = 0;
 
-                if (text.includes(keyword.toLowerCase())) {
-                    score++;
-                }
 
-            });
+        issue.keywords.forEach(keyword => {
 
-            if (score > highestScore) {
+            if (text.includes(keyword.toLowerCase())) {
 
-                highestScore = score;
-                bestMatch = issue;
+                score++;
 
             }
 
         });
 
-        if (!bestMatch) {
 
-            resultDiv.innerHTML = `
-                <div class="error">
-                    <strong>No matching ITSM issue found.</strong>
-                    <br><br>
-                    Please collect more information such as:
-                    error message, affected service,
-                    category and recent changes.
-                </div>
-            `;
+        if (score > highestScore) {
 
-            return;
+            highestScore = score;
+
+            bestMatch = issue;
+
         }
 
-        resultDiv.innerHTML = `
+    });
 
-            <div class="result-box">
 
-                <h2>Analysis Result</h2>
-
-                <p>
-                    <strong>Category:</strong>
-                    ${bestMatch.category}
-                </p>
-
-                <p>
-                    <strong>Priority:</strong>
-                    <span class="priority">
-                        ${bestMatch.priority}
-                    </span>
-                </p>
-
-                <div class="section">
-
-                    <h3>Possible Root Causes</h3>
-
-                    <ul>
-                        ${bestMatch.root_cause
-                            .map(cause => `<li>${cause}</li>`)
-                            .join("")}
-                    </ul>
-
-                </div>
-
-                <div class="section">
-
-                    <h3>Troubleshooting Steps</h3>
-
-                    <ol>
-                        ${bestMatch.troubleshooting_steps
-                            .map(step => `<li>${step}</li>`)
-                            .join("")}
-                    </ol>
-
-                </div>
-
-                <div class="section">
-
-                    <h3>Recommended Action</h3>
-
-                    <p>
-                        ${bestMatch.recommended_action}
-                    </p>
-
-                </div>
-
-            </div>
-        `;
-    }
-
-    catch (error) {
+    if (!bestMatch) {
 
         resultDiv.innerHTML = `
+
             <div class="error">
-                Unable to load the ITSM knowledge base.
+
+                <strong>
+                    No matching ITSM issue found.
+                </strong>
+
+                <br><br>
+
+                Please collect more information such as:
+
+                error message, affected service,
+                category and recent changes.
+
             </div>
+
         `;
 
-        console.error(error);
+        return;
     }
+
+
+    resultDiv.innerHTML = `
+
+        <div class="result-box">
+
+            <h2>Analysis Result</h2>
+
+            <p>
+                <strong>Category:</strong>
+                ${bestMatch.category}
+            </p>
+
+            <p>
+                <strong>Priority:</strong>
+                ${bestMatch.priority}
+            </p>
+
+
+            <div class="section">
+
+                <h3>Possible Root Causes</h3>
+
+                <ul>
+
+                    ${bestMatch.root_cause
+                        .map(item => `<li>${item}</li>`)
+                        .join("")}
+
+                </ul>
+
+            </div>
+
+
+            <div class="section">
+
+                <h3>Troubleshooting Steps</h3>
+
+                <ol>
+
+                    ${bestMatch.troubleshooting_steps
+                        .map(item => `<li>${item}</li>`)
+                        .join("")}
+
+                </ol>
+
+            </div>
+
+
+            <div class="section">
+
+                <h3>Recommended Action</h3>
+
+                <p>
+                    ${bestMatch.recommended_action}
+                </p>
+
+            </div>
+
+        </div>
+
+    `;
+
 }
+
 
 </script>
 
 </body>
+
 </html>
