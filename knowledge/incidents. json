@@ -1,0 +1,76 @@
+[
+  {
+    "keywords": ["vpn", "vpn connection", "vpn authentication"],
+    "category": "Network / VPN",
+    "priority": "High",
+    "root_cause": [
+      "VPN gateway connectivity issue",
+      "Authentication failure",
+      "Firewall or network restriction"
+    ],
+    "troubleshooting_steps": [
+      "Check VPN gateway availability",
+      "Verify user authentication",
+      "Test network connectivity",
+      "Check firewall rules",
+      "Review recent Change Requests"
+    ],
+    "recommended_action": "Check VPN connectivity and authentication logs."
+  },
+  {
+    "keywords": ["ldap", "ldap timeout", "ldap authentication"],
+    "category": "Authentication / LDAP",
+    "priority": "High",
+    "root_cause": [
+      "LDAP server unavailable",
+      "Network connectivity issue",
+      "LDAP port blocked",
+      "Incorrect LDAP configuration"
+    ],
+    "troubleshooting_steps": [
+      "Check LDAP server availability",
+      "Test LDAP port 389 or 636",
+      "Check network connectivity",
+      "Verify LDAP configuration",
+      "Check MID Server connectivity"
+    ],
+    "recommended_action": "Test LDAP connectivity from the MID Server."
+  },
+  {
+    "keywords": ["email", "email notification", "not receiving email"],
+    "category": "Email / Notification",
+    "priority": "Medium",
+    "root_cause": [
+      "SMTP configuration issue",
+      "Email notification configuration issue",
+      "Mailbox or recipient issue"
+    ],
+    "troubleshooting_steps": [
+      "Check ServiceNow email logs",
+      "Verify SMTP configuration",
+      "Check notification conditions",
+      "Verify recipient email address",
+      "Check outbound email status"
+    ],
+    "recommended_action": "Review the ServiceNow email logs and notification configuration."
+  },
+  {
+    "keywords": ["login", "unable to login", "authentication failed"],
+    "category": "Access / Authentication",
+    "priority": "High",
+    "root_cause": [
+      "Authentication failure",
+      "Account locked",
+      "Identity provider issue",
+      "Incorrect credentials"
+    ],
+    "troubleshooting_steps": [
+      "Verify user credentials",
+      "Check whether the account is locked",
+      "Review authentication logs",
+      "Check identity provider availability",
+      "Verify user account status"
+    ],
+    "recommended_action": "Check authentication logs and verify the user's account status."
+  }
+]
