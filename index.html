@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>ServiceNow ITSM Incident Debugger</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 25px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 12px 25px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        #result {
+            margin-top: 30px;
+        }
+
+        .result-box {
+            background: #f8fafc;
+            border-left: 5px solid #2563eb;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .section {
+            margin-top: 20px;
+        }
+
+        .section h3 {
+            color: #374151;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .priority {
+            font-weight: bold;
+        }
+
+        .error {
+            color: #b91c1c;
+            background: #fee2e2;
+            padding: 15px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>ServiceNow ITSM Incident Debugger</h1>
+
+    <p class="subtitle">
+        Analyze an incident and get possible root causes,
+        troubleshooting steps and recommended actions.
+    </p>
+
+    <label for="incident">
+        Incident Description
+    </label>
+
+    <textarea
+        id="incident"
+        placeholder="Example: Users are unable to connect to VPN. VPN authentication failed."
+    ></textarea>
+
+    <button onclick="analyzeIncident()">
+        Analyze Incident
+    </button>
+
+    <div id="result"></div>
+
+</div>
+
+<script>
+
+async function analyzeIncident() {
+
+    const description =
+        document.getElementById("incident").value.trim();
+
+    const resultDiv =
+        document.getElementById("result");
+
+    if (!description) {
+
+        resultDiv.innerHTML = `
+            <div class="error">
+                Please enter an incident description.
+            </div>
+        `;
+
+        return;
+    }
+
+    try {
+
+        const response =
+            await fetch("knowledge/incidents.json");
+
+        const knowledgeBase =
+            await response.json();
+
+        const text =
+            description.toLowerCase();
+
+        let bestMatch = null;
+        let highestScore = 0;
+
+        knowledgeBase.forEach(issue => {
+
+            let score = 0;
+
+            issue.keywords.forEach(keyword => {
+
+                if (text.includes(keyword.toLowerCase())) {
+                    score++;
+                }
+
+            });
+
+            if (score > highestScore) {
+
+                highestScore = score;
+                bestMatch = issue;
+
+            }
+
+        });
+
+        if (!bestMatch) {
+
+            resultDiv.innerHTML = `
+                <div class="error">
+                    <strong>No matching ITSM issue found.</strong>
+                    <br><br>
+                    Please collect more information such as:
+                    error message, affected service,
+                    category and recent changes.
+                </div>
+            `;
+
+            return;
+        }
+
+        resultDiv.innerHTML = `
+
+            <div class="result-box">
+
+                <h2>Analysis Result</h2>
+
+                <p>
+                    <strong>Category:</strong>
+                    ${bestMatch.category}
+                </p>
+
+                <p>
+                    <strong>Priority:</strong>
+                    <span class="priority">
+                        ${bestMatch.priority}
+                    </span>
+                </p>
+
+                <div class="section">
+
+                    <h3>Possible Root Causes</h3>
+
+                    <ul>
+                        ${bestMatch.root_cause
+                            .map(cause => `<li>${cause}</li>`)
+                            .join("")}
+                    </ul>
+
+                </div>
+
+                <div class="section">
+
+                    <h3>Troubleshooting Steps</h3>
+
+                    <ol>
+                        ${bestMatch.troubleshooting_steps
+                            .map(step => `<li>${step}</li>`)
+                            .join("")}
+                    </ol>
+
+                </div>
+
+                <div class="section">
+
+                    <h3>Recommended Action</h3>
+
+                    <p>
+                        ${bestMatch.recommended_action}
+                    </p>
+
+                </div>
+
+            </div>
+        `;
+    }
+
+    catch (error) {
+
+        resultDiv.innerHTML = `
+            <div class="error">
+                Unable to load the ITSM knowledge base.
+            </div>
+        `;
+
+        console.error(error);
+    }
+}
+
+</script>
+
+</body>
+</html>
